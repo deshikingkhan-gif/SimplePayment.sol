@@ -1,134 +1,130 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arc Testnet Payment Gateway</title>
-    <!-- Ethers.js Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f6f8; }
-        .card { background: white; padding: 20px; border-radius: 8px; max-width: 500px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        input, button { width: 100%; padding: 10px; margin: 8px 0; box-sizing: border-box; }
-        button { background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        button:hover { background-color: #0056b3; }
-        .danger-btn { background-color: #dc3545; }
-        .danger-btn:hover { background-color: #a71d2a; }
-        .status { word-break: break-all; font-weight: bold; color: #28a745; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arc Testnet Payment Gateway</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Hind Siliguri', sans-serif; }
+    body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #f8fafc; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .app-container { width: 100%; max-width: 450px; background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }
+    .header { text-align: center; margin-bottom: 24px; }
+    .header h2 { font-size: 22px; color: #38bdf8; margin-bottom: 4px; }
+    .card { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    .card-title { font-size: 15px; color: #94a3b8; margin-bottom: 12px; display: flex; justify-content: space-between; }
+    input { width: 100%; background: #0f172a; border: 1px solid #334155; padding: 12px 14px; border-radius: 8px; color: #fff; font-size: 14px; margin-bottom: 10px; outline: none; transition: 0.2s; }
+    input:focus { border-color: #38bdf8; box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2); }
+    .btn { width: 100%; background: linear-gradient(90deg, #0284c7, #0369a1); color: #fff; border: none; padding: 12px; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-danger { background: linear-gradient(90deg, #dc2626, #b91c1c); }
+    .status-badge { font-size: 13px; padding: 4px 10px; border-radius: 20px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+    .status-badge.connected { background: rgba(34, 197, 94, 0.1); color: #22c55e; border-color: rgba(34, 197, 94, 0.2); }
+    .balance-text { font-size: 20px; font-weight: 700; color: #f3f4f6; text-align: center; margin-top: 8px; }
+  </style>
 </head>
 <body>
 
-    <div class="card">
-        <h2>Arc Network Payment Gateway</h2>
-        <button onclick="connectWallet()">MetaMask ওয়ালেট কানেক্ট করুন</button>
-        <p id="walletAddress">ওয়ালেট: কানেক্ট করা হয়নি</p>
+<div class="app-container">
+  <div class="header">
+    <h2>Arc Network Gateway</h2>
+    <p style="color: #64748b; font-size: 13px;">স্মার্ট কন্ট্রাক্ট পেমেন্ট প্ল্যাটফর্ম</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <span>ওয়ালেট স্ট্যাটাস</span>
+      <span id="badge" class="status-badge">ডিসকানেক্টেড</span>
     </div>
+    <button id="btnConnect" class="btn" onclick="connectWallet()">MetaMask কানেক্ট করুন</button>
+    <p id="walletAddress" style="font-size: 12px; color: #94a3b8; text-align: center; margin-top: 8px;"></p>
+  </div>
 
-    <div class="card">
-        <h3>পেমেন্ট পাঠান (pay)</h3>
-        <input type="text" id="reference" placeholder="পেমেন্ট রেফারেন্স (যেমন: Order #101)">
-        <input type="number" id="amount" placeholder="পরিমাণ (Native Token)" step="0.001">
-        <button onclick="sendPayment()">পেমেন্ট সম্পন্ন করুন</button>
-    </div>
+  <div class="card">
+    <div class="card-title"><span>পেমেন্ট পাঠান</span></div>
+    <input type="text" id="reference" placeholder="রেফারেন্স আইডি (যেমন: Order #101)">
+    <input type="number" id="amount" placeholder="পরিমাণ (ETH/Token)" step="0.001">
+    <button id="btnPay" class="btn" onclick="sendPayment()">পেমেন্ট নিশ্চিত করুন</button>
+  </div>
 
-    <div class="card">
-        <h3>কন্ট্রাক্ট ব্যালেন্স (getBalance)</h3>
-        <button onclick="checkBalance()">ব্যালেন্স রিফ্রেশ করুন</button>
-        <p id="contractBalance">মোট ব্যালেন্স: 0 ETH/Token</p>
-    </div>
+  <div class="card">
+    <div class="card-title"><span>কন্ট্রাক্ট মোট ব্যালেন্স</span></div>
+    <p id="contractBalance" class="balance-text">0.00 Token</p>
+    <button class="btn" style="background: #1e293b; margin-top: 10px; border: 1px solid #334155;" onclick="checkBalance()">রিফ্রেশ করুন</button>
+  </div>
 
-    <div class="card">
-        <h3>তহবিল তুলুন (withdrawAll)</h3>
-        <p><small>* শুধুমাত্র কন্ট্রাক্ট ওনার এই অপশনটি ব্যবহার করতে পারবেন</small></p>
-        <button class="danger-btn" onclick="withdraw()">সব ফান্ড ওনার ওয়ালেটে তুলুন</button>
-    </div>
+  <div class="card">
+    <div class="card-title"><span style="color: #ef4444;">ওনার প্যানেল</span></div>
+    <button id="btnWithdraw" class="btn btn-danger" onclick="withdraw()">সমস্ত ফান্ড উইথড্র করুন</button>
+  </div>
+</div>
 
-    <script>
-        // GitHub README অনুযায়ী Arc Testnet Deployed Address
-        const contractAddress = "0xAbd514B4aA7f9A09C71b138D7EF66D0ad345d075";
-        
-        // PaymentGateway.sol-এর ABI
-        const contractABI = [
-            "function pay(string memory _reference) external payable",
-            "function getBalance() external view returns (uint256)",
-            "function withdrawAll() external"
-        ];
+<script>
+  const contractAddress = "0xAbd514B4aA7f9A09C71b138D7EF66D0ad345d075";
+  const contractABI = [
+    "function pay(string memory _reference) external payable",
+    "function getBalance() external view returns (uint256)",
+    "function withdrawAll() external"
+  ];
 
-        let provider;
-        let signer;
-        let contract;
+  let provider, signer, contract;
 
-        // ১. MetaMask ওয়ালেট কানেক্ট করা
-        async function connectWallet() {
-            if (window.ethereum) {
-                try {
-                    provider = new ethers.providers.Web3Provider(window.ethereum);
-                    await provider.send("eth_requestAccounts", []);
-                    signer = provider.getSigner();
-                    const address = await signer.getAddress();
-                    document.getElementById("walletAddress").innerText = "ওয়ালেট: " + address;
-                    
-                    contract = new ethers.Contract(contractAddress, contractABI, signer);
-                    checkBalance();
-                } catch (error) {
-                    alert("ওয়ালেট কানেক্ট করতে ব্যর্থ হয়েছে!");
-                }
-            } else {
-                alert("দয়া করে ব্রাউজারে MetaMask ইনস্টল করুন!");
-            }
-        }
+  async function connectWallet() {
+    if (!window.ethereum) return alert("MetaMask ইনস্টল করুন!");
+    try {
+      provider = new ethers.providers.Web3Provider(window.ethereum);
+      await provider.send("eth_requestAccounts", []);
+      signer = provider.getSigner();
+      const address = await signer.getAddress();
+      
+      document.getElementById("walletAddress").innerText = address.substring(0,6) + "..." + address.substring(address.length - 4);
+      document.getElementById("badge").innerText = "কানেক্টেড";
+      document.getElementById("badge").classList.add("connected");
+      
+      contract = new ethers.Contract(contractAddress, contractABI, signer);
+      checkBalance();
+    } catch (e) {
+      alert("ওয়ালেট কানেক্ট হয়নি!");
+    }
+  }
 
-        // ২. pay() ফাংশন ব্যবহার করে পেমেন্ট করা
-        async function sendPayment() {
-            if (!contract) return alert("প্রথমে ওয়ালেট কানেক্ট করুন!");
-            
-            const ref = document.getElementById("reference").value;
-            const ethAmount = document.getElementById("amount").value;
-            
-            if (!ref || !ethAmount) return alert("রেফারেন্স এবং টাকার পরিমাণ সঠিকভাবে দিন");
+  async function sendPayment() {
+    if (!contract) return alert("প্রথমে ওয়ালেট কানেক্ট করুন!");
+    const ref = document.getElementById("reference").value;
+    const amount = document.getElementById("amount").value;
+    if (!ref || !amount || amount <= 0) return alert("সঠিক বিবরণ দিন!");
 
-            try {
-                const tx = await contract.pay(ref, {
-                    value: ethers.utils.parseEther(ethAmount)
-                });
-                alert("ট্রানজ্যাকশন প্রসেস হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।");
-                await tx.wait();
-                alert("পেমেন্ট সফলভাবে সম্পন্ন হয়েছে!");
-                checkBalance();
-            } catch (error) {
-                console.error(error);
-                alert("পেমেন্ট ব্যর্থ হয়েছে!");
-            }
-        }
+    try {
+      const tx = await contract.pay(ref, { value: ethers.utils.parseEther(amount) });
+      await tx.wait();
+      alert("পেমেন্ট সফল হয়েছে!");
+      checkBalance();
+    } catch (e) {
+      alert("ট্রানজ্যাকশন ব্যর্থ হয়েছে!");
+    }
+  }
 
-        // ৩. getBalance() দিয়ে ব্যালেন্স চেক করা
-        async function checkBalance() {
-            if (!contract) return;
-            try {
-                const balance = await contract.getBalance();
-                const ethBalance = ethers.utils.formatEther(balance);
-                document.getElementById("contractBalance").innerText = "মোট ব্যালেন্স: " + ethBalance + " Token";
-            } catch (error) {
-                console.error(error);
-            }
-        }
+  async function checkBalance() {
+    if (!contract) return;
+    try {
+      const balance = await contract.getBalance();
+      document.getElementById("contractBalance").innerText = ethers.utils.formatEther(balance) + " Token";
+    } catch (e) { console.error(e); }
+  }
 
-        // ৪. withdrawAll() ফাংশন দিয়ে ওনারের ফান্ড তোলা
-        async function withdraw() {
-            if (!contract) return alert("প্রথমে ওয়ালেট কানেক্ট করুন!");
-            
-            try {
-                const tx = await contract.withdrawAll();
-                alert("ফান্ড উত্তোলনের কাজ চলছে...");
-                await tx.wait();
-                alert("সমস্ত ফান্ড সফলভাবে ওনার ওয়ালেটে পৌঁছেছে!");
-                checkBalance();
-            } catch (error) {
-                console.error(error);
-                alert("ত্রুটি: শুধুমাত্র কন্ট্রাক্টের আসল ওনার এই ফান্ড তুলতে পারবেন।");
-            }
-        }
-    </script>
+  async function withdraw() {
+    if (!contract) return alert("প্রথমে ওয়ালেট কানেক্ট করুন!");
+    try {
+      const tx = await contract.withdrawAll();
+      await tx.wait();
+      alert("ফান্ড উইথড্র সফল হয়েছে!");
+      checkBalance();
+    } catch (e) {
+      alert("শুধুমাত্র ওনার উইথড্র করতে পারবেন!");
+    }
+  }
+</script>
 </body>
 </html>
